@@ -1,0 +1,7 @@
+name: tweet
+max_length: 64
+padding: "right"
+truncation: "right"
+embedding_dim: 128
+vocab_size: null
+eval_set_ratio: 0.1

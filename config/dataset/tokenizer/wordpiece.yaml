@@ -1,0 +1,3 @@
+wordpiece:
+  vocab_size: 32000
+  min_frequency: 2
