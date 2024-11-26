@@ -1,0 +1,4 @@
+name: embedding
+num_embeddings: null
+embedding_dim: null
+scale_grad_by_freq: true

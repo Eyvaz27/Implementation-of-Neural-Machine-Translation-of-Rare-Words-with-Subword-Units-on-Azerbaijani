@@ -2,6 +2,7 @@ defaults:
   - hydra: defaults
   - dataset/task: aze_nsp
   - dataset/tokenizer: bpe
+  - model/embedding: embedding
   - model/encoder: lstm
   - model/decoder: lstm_cell
   - loss: [cce]
