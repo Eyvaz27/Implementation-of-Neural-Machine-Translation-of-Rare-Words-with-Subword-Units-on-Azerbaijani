@@ -1,0 +1,46 @@
+defaults:
+  - hydra: defaults
+  - dataset: aze_eng
+  - model/
+  - model/encoder: bahdanau
+  - model/decoder: perceptron
+  - loss: [cce]
+  - _self_ 
+
+data_loader:
+  train:
+    num_workers: 4
+    prefetch_factor: 8
+    persistent_workers: true
+    batch_size: 8
+    random_seed: 42
+  test:
+    num_workers: 1
+    prefetch_factor: 1
+    persistent_workers: false
+    batch_size: 1
+    random_seed: 42
+  val:
+    num_workers: 1
+    prefetch_factor: 1
+    persistent_workers: true
+    batch_size: 1
+    random_seed: 42
+
+trainer:
+  epoch_num: 21
+  pretrained_ckpt: null
+  optimizer:
+    optimizer_type: "adam"
+    base_lr: 1.5e-3
+    betas:
+      - 0.9
+      - 0.999
+    scheduler: 'cos'
+    eta_min: 1e-5
+    gradient_clip_val: 0.1
+  checkpointing:
+    checkpoint_iter: 10
+    training_loss_log: 1
+    validate_iter: 5
+    test_iter: 20
