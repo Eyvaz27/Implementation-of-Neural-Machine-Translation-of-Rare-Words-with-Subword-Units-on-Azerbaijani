@@ -1,9 +1,10 @@
 defaults:
   - hydra: defaults
-  - dataset: aze_eng
+  - dataset: aze_nsp
   - model/
+  - model/tokenizer: bpe
   - model/encoder: bahdanau
-  - model/decoder: perceptron
+  - model/decoder: bahdanau
   - loss: [cce]
   - _self_ 
 
