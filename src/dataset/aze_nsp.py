@@ -1,3 +1,4 @@
+import os
 import torch
 import numpy as np
 import pandas as pd
@@ -60,8 +61,8 @@ class AZE_NSP_Dataset(Dataset):
             y_train.reset_index(inplace=True, drop=True)
             y_val.reset_index(inplace=True, drop=True)
 
-            if not os.path.isfile(str(self.cfg.tokenizer.ckpt_path))
-                self.full_input_set = X_train_val.map(lambda sentence: "<bos> " + sentence + " <eos>")
+            if not os.path.isfile(str(self.cfg.tokenizer.ckpt_path)):
+                self.full_input_set = X_train_val
             if self.stage == "train":
                 self.input_text_samples = X_train.map(lambda sentence: "<bos> " + sentence + " <eos>")
                 self.output_text_samples = y_train.map(lambda sentence: "<bos> " + sentence + " <eos>")
@@ -73,10 +74,9 @@ class AZE_NSP_Dataset(Dataset):
         if os.path.isfile(str(self.cfg.tokenizer.ckpt_path)):
             self.tokenizer = Tokenizer.from_file(self.cfg.tokenizer.ckpt_path)
         else: self.fit_tokenizer()
-
-        self.tokenizer.enable_padding(direction=self.cfg.padding)
-        self.tokenizer.enable_truncation(max_length=self.cfg.max_length, 
-                                         direction=self.cfg.truncation)
+        # self.tokenizer.enable_padding(direction=self.cfg.padding, length=self.cfg.max_length)
+        # self.tokenizer.enable_truncation(max_length=self.cfg.max_length, 
+        #                                  direction=self.cfg.truncation)
 
     def fit_tokenizer(self):
         # Initialize a tokenizer
@@ -85,9 +85,9 @@ class AZE_NSP_Dataset(Dataset):
         self.tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=True)
         self.tokenizer.decoder = decoders.ByteLevel()
         self.tokenizer.post_processor = processors.ByteLevel(trim_offsets=True)
+
         # And then train
-        initial_aze_alphabet = list(set(' '.join(X_train_val)))
-        
+        initial_aze_alphabet = list(set(' '.join(self.full_input_set)))
         # defining parameters for BPE
         trainer = trainers.BpeTrainer(
             vocab_size=self.cfg.tokenizer.vocab_size, 
@@ -96,7 +96,8 @@ class AZE_NSP_Dataset(Dataset):
             special_tokens=["<bos>", "<eos>", "<pad>", "<mask>"])
 
         # training tokenizer on a given Train/Val set
-        self.tokenizer.train_from_iterator(self.full_input_set, trainer=trainer)
+        self.tokenizer.train_from_iterator(self.full_input_set.map(lambda sentence: "<bos> " + 
+                                                                   sentence + " <eos>"), trainer=trainer)
         self.tokenizer.save(self.cfg.tokenizer.ckpt_path, pretty=True)
         
     def __len__(self):
@@ -105,8 +106,16 @@ class AZE_NSP_Dataset(Dataset):
     def __getitem__(self, idx):
         # # # 
         # # # retrieving samples from the dataset
+        # Last portion of the input sentence will be retrieved
+        self.tokenizer.enable_padding(length=self.cfg.max_length, direction="left")
+        self.tokenizer.enable_truncation(max_length=self.cfg.max_length, direction="left")
         input_context = self.tokenizer.encode(self.input_text_samples[idx]).ids
+
+        # first portion of the output sentence will be retrieved
+        self.tokenizer.enable_padding(length=self.cfg.max_length, direction="right")
+        self.tokenizer.enable_truncation(max_length=self.cfg.max_length, direction="right")
         output_sentence = self.tokenizer.encode(self.label_texts[idx])
+
         return {"input": torch.LongTensor(np.array(input_context).reshape(-1, 1)),
                 "output": torch.LongTensor(np.array(output_sentence).reshape(-1, 1))}
     

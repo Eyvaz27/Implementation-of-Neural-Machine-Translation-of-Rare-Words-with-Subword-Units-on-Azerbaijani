@@ -6,4 +6,3 @@ bias: true
 batch_first: true
 dropout: 0.3
 bidirectional: true
-aggregation: sum

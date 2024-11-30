@@ -1,6 +1,6 @@
 name: aze_nsp
 max_length: 64
-padding: "right"
-truncation: "right"
+padding: "left"
+truncation: "left"
 eval_set_ratio: 0.1
 tokenizer: bpe

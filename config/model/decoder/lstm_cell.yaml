@@ -2,4 +2,10 @@ name: lstm_cell
 input_size: null
 hidden_size: 64
 bias: true
-out_shape: null
+output_len: null
+vocab_size: null
+# hsoftmax: 
+#   vocab_size: null,
+#   hidden_dim: 64,
+#   huffman_tree_dir: "/workspaces/Implementation-of-Neural-Machine-Translation-of-Rare-Words-with-Subword-Units-on-Azerbaijani/analysis/huffman_save/aze_nsp/",
+#   num_workers: 1
