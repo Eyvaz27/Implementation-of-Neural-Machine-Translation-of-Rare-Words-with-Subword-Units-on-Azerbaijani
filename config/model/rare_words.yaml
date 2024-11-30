@@ -1,0 +1,5 @@
+encoder: lstm
+decoder: lstm_cell
+embedding:
+  embedding_dim: 128
+  use_same_embedding: true
