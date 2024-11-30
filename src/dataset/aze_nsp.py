@@ -105,9 +105,8 @@ class AZE_NSP_Dataset(Dataset):
     def __getitem__(self, idx):
         # # # 
         # # # retrieving samples from the dataset
-        sample_AZE_NSP_ = self.feature_texts[idx]
-        sample_label = self.label_texts[idx]
-        with torch.no_grad():
-            token_embedding = self.embedding_layer(self.tokenizer(sample_AZE_NSP_)).squeeze(axis=0)
-        return token_embedding, sample_label
+        input_context = self.tokenizer.encode(self.input_text_samples[idx]).ids
+        output_sentence = self.tokenizer.encode(self.label_texts[idx])
+        return {"input": torch.LongTensor(np.array(input_context).reshape(-1, 1)),
+                "output": torch.LongTensor(np.array(output_sentence).reshape(-1, 1))}
     
