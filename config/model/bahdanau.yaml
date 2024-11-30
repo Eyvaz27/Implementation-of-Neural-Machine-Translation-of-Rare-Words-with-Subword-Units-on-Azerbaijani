@@ -1,5 +1,7 @@
 encoder: lstm
 decoder: lstm_cell
+vocab_size: null
+max_length: null
 embedding:
   embedding_dim: 128
   use_same_embedding: true

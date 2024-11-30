@@ -37,7 +37,7 @@ class DecoderLSTMCell(Decoder[DecoderLSTMCellCfg]):
                       out_features=self.cfg.input_size, bias=True))
         self.next_token_out = nn.Sequential(
             nn.Linear(in_features=self.cfg.input_size, 
-                      out_features=self.cfg.vocab_size, bias=True))
+                      out_features=self.cfg.vocab_size, bias=True), nn.LogSoftmax(dim=1))
         
     def init_hidden_cell(self):
         self.y0 = torch.nn.Parameter(torch.randn(1, self.cfg.input_size)) # requires_grad
@@ -57,7 +57,7 @@ class DecoderLSTMCell(Decoder[DecoderLSTMCellCfg]):
 
         outputs = [repeat(self.y0, "1 dim -> n dim", n=N)]
         output_logits = []
-        for i in range(self.cfg.output_len):
+        for _ in range(self.cfg.output_len):
              # following equation 5&6 in https://arxiv.org/pdf/1409.0473
              # we will only compare hidden_state against input
              hx_seq = repeat(hx, "n dim -> n s dim", s=seq)
@@ -74,5 +74,5 @@ class DecoderLSTMCell(Decoder[DecoderLSTMCellCfg]):
              output_logits.append(self.next_token_out(nn.Relu(next_token_inShape)))
              outputs.append(next_token_inShape)
         
-        output_logits = torch.stack(output_logits, dim=1) # [batch, out_seq, input_size]
+        output_logits = torch.stack(output_logits, dim=1) # [batch, out_seq, vocab_size]
         return output_logits

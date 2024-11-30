@@ -1,7 +1,7 @@
 defaults:
   - hydra: defaults
   - dataset: aze_nsp
-  - model: rare_words
+  - model: bahdanau
   - loss: [cce]
   - _self_ 
 

@@ -2,3 +2,5 @@ name: gru_cell
 input_size: null
 hidden_size: 64
 bias: true
+output_len: null
+vocab_size: null
