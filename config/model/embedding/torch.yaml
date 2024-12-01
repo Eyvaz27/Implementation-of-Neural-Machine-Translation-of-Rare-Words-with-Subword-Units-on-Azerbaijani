@@ -1,0 +1,3 @@
+name: torch
+embedding_dim: 128
+scale_grad_by_freq: true

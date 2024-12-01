@@ -18,10 +18,9 @@ import numpy as np
 from .config import load_typed_root_config
 from .loss import get_losses
 from .loss.loss import Loss
+from .model import get_model, NSP
 from torchsummary import summary
 from .dataset.data_module import DataModule
-from .model.encoder import Encoder, get_encoder
-from .model.decoder import Decoder, get_decoder
 from torch.optim.lr_scheduler import CosineAnnealingLR, CosineAnnealingWarmRestarts
 
 import ssl
@@ -30,15 +29,13 @@ ssl._create_default_https_context = ssl._create_unverified_context
 class Trainer:
     #
     trainer_cfg: dict
-    encoder: nn.Module
-    decoder: Decoder
+    model: NSP
     losses: nn.ModuleList
     
     def __init__(
         self,
         trainer_cfg,
-        encoder: Encoder,
-        decoder: Decoder,
+        model: NSP,
         losses: list[Loss], visdir, 
         datamodule) -> None:
         super().__init__()
@@ -47,8 +44,7 @@ class Trainer:
         self.cfg = trainer_cfg
         self.vis_dir = visdir
         # Set up the model.
-        self.encoder = encoder
-        self.decoder = decoder
+        self.model = model
         self.losses = nn.ModuleList(losses)
         
         # # # setting up the dataloaders
@@ -74,9 +70,7 @@ class Trainer:
             print('Loading an existing model from ', os.path.join(self.vis_dir, "model_best.pth"))
             saved_checkpoint = torch.load(os.path.join(self.vis_dir, "model_best.pth"),
                                           map_location="cuda:"+str(self.device_id_local))
-            self.encoder.load_state_dict(saved_checkpoint["encoder_model_state_dict"])
-            self.decoder.load_state_dict(saved_checkpoint["decoder_model_state_dict"])
-            # # # 
+            self.model.load_state_dict(saved_checkpoint["model_state_dict"])
             self.optimizer.load_state_dict(saved_checkpoint["optimizer_state_dict"])
             self.training_iter = saved_checkpoint["iteration"]
             self.validation_loss_best = saved_checkpoint["validation_loss_best"]
@@ -86,9 +80,7 @@ class Trainer:
             print('Loading an existing model from ', os.path.join(self.vis_dir, "model_latest.pth"))
             saved_checkpoint = torch.load(os.path.join(self.vis_dir, "model_latest.pth"),
                                           map_location="cuda:"+str(self.device_id_local)) 
-            self.encoder.load_state_dict(saved_checkpoint["encoder_model_state_dict"])
-            self.decoder.load_state_dict(saved_checkpoint["decoder_model_state_dict"])
-            # # # 
+            self.model.load_state_dict(saved_checkpoint["model_state_dict"])
             self.optimizer.load_state_dict(saved_checkpoint["optimizer_state_dict"])
             self.training_iter = saved_checkpoint["iteration"]
             self.validation_loss_best = saved_checkpoint["validation_loss_best"]
@@ -100,9 +92,7 @@ class Trainer:
                 print('Loading an existing model from ', os.path.join(self.cfg.pretrained_ckpt, "model_best.pth"))
                 saved_checkpoint = torch.load(os.path.join(self.cfg.pretrained_ckpt, "model_best.pth"),
                                             map_location="cuda:"+str(self.device_id_local)) 
-                self.encoder.load_state_dict(saved_checkpoint["encoder_model_state_dict"])
-                self.decoder.load_state_dict(saved_checkpoint["decoder_model_state_dict"])
-                # # # 
+                self.model.load_state_dict(saved_checkpoint["model_state_dict"])
                 self.optimizer.load_state_dict(saved_checkpoint["optimizer_state_dict"])
                 self.training_iter = saved_checkpoint["iteration"]
                 self.validation_loss_best = saved_checkpoint["validation_loss_best"]
@@ -112,9 +102,7 @@ class Trainer:
                 print('Loading an existing model from ', os.path.join(self.cfg.pretrained_ckpt, "model_latest.pth"))
                 saved_checkpoint = torch.load(os.path.join(self.cfg.pretrained_ckpt, "model_latest.pth"),
                                             map_location="cuda:"+str(self.device_id_local)) 
-                self.encoder.load_state_dict(saved_checkpoint["encoder_model_state_dict"])
-                self.decoder.load_state_dict(saved_checkpoint["decoder_model_state_dict"])
-                # # # 
+                self.model.load_state_dict(saved_checkpoint["model_state_dict"])
                 self.optimizer.load_state_dict(saved_checkpoint["optimizer_state_dict"])
                 self.training_iter = saved_checkpoint["iteration"]
                 self.validation_loss_best = saved_checkpoint["validation_loss_best"]
@@ -125,20 +113,16 @@ class Trainer:
     
     def model_optim_init(self): 
         
-        self.encoder.train()
-        self.decoder.train()
-        
-        # https://discuss.pytorch.org/t/optimizer-on-multi-neural-networks/20572?u=ptrblck
-        self.optim_params = list(self.encoder.parameters()) + list(self.decoder.parameters())
+        self.model.train()
 
         if self.cfg.optimizer.optimizer_type == "adam":
-            self.optimizer = torch.optim.Adam(self.optim_params, lr=self.cfg.optimizer.base_lr, 
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.cfg.optimizer.base_lr, 
                                               eps=1e-15, betas=self.cfg.optimizer.betas)
         elif self.cfg.optimizer.optimizer_type == "adamw":
-            self.optimizer = torch.optim.Adam(self.optim_params, lr=self.cfg.optimizer.base_lr,
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.cfg.optimizer.base_lr,
                                               betas=self.cfg.optimizer.betas)
         elif self.cfg.optimizer.optimizer_type == "sgd":
-            self.optimizer = torch.optim.Adam(self.optim_params, lr=self.cfg.optimizer.base_lr)
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.cfg.optimizer.base_lr)
         # # 
         # Settint the sceduler for training
         if self.cfg.optimizer.scheduler=='cos':
@@ -152,7 +136,7 @@ class Trainer:
         total_loss = 0.0
         
         features, gt_label = batch
-        predictions = self.encoder(features)
+        predictions = self.model(features)
         
         for loss_fn in self.losses:
             total_loss += loss_fn.forward(predictions, gt_label)
@@ -167,7 +151,7 @@ class Trainer:
             total_loss = 0.0
 
             features, gt_label = batch
-            predictions = self.encoder(features)
+            predictions = self.model(features)
             
             for loss_fn in self.losses:
                 total_loss += loss_fn.forward(predictions, gt_label)
@@ -184,7 +168,7 @@ class Trainer:
             total_loss = 0.0
 
             features, gt_label = batch
-            predictions = self.encoder(features)
+            predictions = self.model(features)
             
             for loss_fn in self.losses:
                 total_loss += loss_fn.forward(predictions, gt_label)
@@ -230,8 +214,7 @@ class Trainer:
                         "iteration": epoch_num,
                         "validation_loss_best": self.validation_loss_best,
                         "optimizer_state_dict": self.optimizer.state_dict(),
-                        "encoder_model_state_dict": self.encoder.state_dict(),
-                        "decoder_model_state_dict": self.decoder.state_dict()}
+                        "model_state_dict": self.model.state_dict()}
                     torch.save(self.ckpt_save_dict, os.path.join(self.vis_dir, "model_best.pth"))
                     print("\nNew Best Model has been recorded ...\n")
                     
@@ -246,32 +229,31 @@ class Trainer:
                     "iteration": epoch_num,
                     "validation_loss_best": self.validation_loss_best,
                     "optimizer_state_dict": self.optimizer.state_dict(),
-                    "encoder_model_state_dict": self.encoder.state_dict(),
-                    "decoder_model_state_dict": self.decoder.state_dict()}
+                    "model_state_dict": self.model.state_dict()}
                 torch.save(latest_ckpt_save_dict, os.path.join(self.vis_dir, "model_latest.pth"))
-
 
 
 def model_training(cfg, vis_dir):
     
+    # loading dataset and dataloader
     cfg = load_typed_root_config(cfg)
     data_module = DataModule(cfg.dataset, cfg.data_loader, global_rank=0)
 
-    cfg.model.encoder.input_size = cfg.dataset.embedding_dim
-    encoder = get_encoder(cfg.model.encoder)
+    # loading model with updated cfgs
+    cfg.model.vocab_size = cfg.dataset.tokenizer.vocab_size
+    cfg.model.max_length = cfg.dataset.max_length
+    model = get_model(cfg.model)
 
-    cfg.model.decoder.input_size = encoder.feature_dim()
-    cfg.model.decoder.output_size = cfg.dataset.class_count
-    decoder = get_decoder(cfg.model.decoder)
+    # getting losses
     losses = get_losses(cfg.loss)
 
-    trainer = Trainer(trainer_cfg=cfg.trainer, encoder=encoder, decoder=decoder, 
-                      losses=losses, visdir=vis_dir, datamodule=data_module)
+    trainer = Trainer(trainer_cfg=cfg.trainer, model=model, losses=losses, 
+                      visdir=vis_dir, datamodule=data_module)
     trainer.train_model()
 
 if __name__ == "__main__":
     # You need to set the ocnfigus directory properly
-    experiments_out_dir = "/workspaces/NLP---Text-Classification-of-Coronavirus-Tweets/experiments/"
+    experiments_out_dir = "/workspaces/Implementation-of-Neural-Machine-Translation-of-Rare-Words-with-Subword-Units-on-Azerbaijani/experiments/"
     newest_day_dir = max(glob.glob(os.path.join(experiments_out_dir, '*/')), key=os.path.getmtime)
     vis_dir = max(glob.glob(os.path.join(newest_day_dir, '*/')), key=os.path.getmtime)
     cfg_file_path = os.path.join(vis_dir, "configs.yaml")

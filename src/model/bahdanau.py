@@ -12,11 +12,13 @@ from .decoder import get_decoder, DecoderCfg
 
 @dataclass
 class EmbeddingCfg:
+    name: Literal["torch"]
     embedding_dim: int
-    use_same_embedding: bool
+    scale_grad_by_freq: bool
 
 @dataclass
 class BahdanauCfg:
+    name: Literal["bahdanau"]
     encoder: EncoderCfg
     decoder: DecoderCfg
     embedding: EmbeddingCfg
@@ -29,7 +31,8 @@ class Bahdanau(NSP[BahdanauCfg]):
         
         # initializing Embedding Layer
         self.embedding_layer = nn.Embedding(num_embeddings=self.cfg.vocab_size, 
-                                            embedding_dim=self.cfg.embedding.embedding_dim)
+                                            embedding_dim=self.cfg.embedding.embedding_dim,
+                                            scale_grad_by_freq=self.cfg.embedding.scale_grad_by_freq)
 
         # initializing Encoder
         self.cfg.encoder.input_size = self.cfg.embedding.embedding_dim
