@@ -72,6 +72,7 @@ class AZE_NSP_Dataset(Dataset):
     def init_tokenizer(self):
         if os.path.isfile(str(self.cfg.tokenizer.ckpt_path)):
             self.tokenizer = Tokenizer.from_file(self.cfg.tokenizer.ckpt_path)
+            self.cfg.tokenizer.vocab_size = self.tokenizer.get_vocab_size()
         else: self.fit_tokenizer()
         # self.tokenizer.enable_padding(direction=self.cfg.padding, length=self.cfg.max_length)
         # self.tokenizer.enable_truncation(max_length=self.cfg.max_length, 

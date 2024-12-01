@@ -1,0 +1,75 @@
+dataset:
+  tokenizer:
+    vocab_size: 32000
+    min_frequency: 2
+    ckpt_path: /workspaces/Implementation-of-Neural-Machine-Translation-of-Rare-Words-with-Subword-Units-on-Azerbaijani/analysis/tokenizer_files/aze_nsp.json
+  name: aze_nsp
+  max_length: 64
+  padding: left
+  truncation: left
+  eval_set_ratio: 0.1
+model:
+  encoder:
+    name: lstm
+    input_size: null
+    hidden_size: 64
+    num_layers: 2
+    bias: true
+    batch_first: true
+    dropout: 0.3
+    bidirectional: true
+  decoder:
+    name: lstm_cell
+    input_size: null
+    hidden_size: 64
+    bias: true
+    output_len: null
+    vocab_size: null
+    huffman_tree_dir: /workspaces/Implementation-of-Neural-Machine-Translation-of-Rare-Words-with-Subword-Units-on-Azerbaijani/analysis/huffman_save/aze_nsp/
+  embedding:
+    name: torch
+    embedding_dim: 128
+    scale_grad_by_freq: true
+  name: bahdanau
+  vocab_size: null
+  max_length: null
+loss:
+  nll:
+    name: NLL
+    weight: 1.0
+data_loader:
+  train:
+    num_workers: 4
+    prefetch_factor: 8
+    persistent_workers: true
+    batch_size: 8
+    random_seed: 42
+  test:
+    num_workers: 1
+    prefetch_factor: 1
+    persistent_workers: false
+    batch_size: 1
+    random_seed: 42
+  val:
+    num_workers: 1
+    prefetch_factor: 1
+    persistent_workers: true
+    batch_size: 1
+    random_seed: 42
+trainer:
+  epoch_num: 21
+  pretrained_ckpt: null
+  optimizer:
+    optimizer_type: adam
+    base_lr: 0.0015
+    betas:
+    - 0.9
+    - 0.999
+    scheduler: cos
+    eta_min: 1.0e-05
+    gradient_clip_val: 0.1
+  checkpointing:
+    checkpoint_iter: 10
+    training_loss_log: 1
+    validate_iter: 5
+    test_iter: 20

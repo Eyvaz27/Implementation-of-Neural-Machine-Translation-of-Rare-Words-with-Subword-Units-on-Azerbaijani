@@ -44,6 +44,13 @@ class DataModule:
         self.dataset_cfg = dataset_cfg
         self.data_loader_cfg = data_loader_cfg
         self.global_rank = global_rank
+        self.train_dataset = get_dataset(self.dataset_cfg, "train", 
+                                         self.data_loader_cfg.train.random_seed)
+        self.val_dataset = get_dataset(self.dataset_cfg, "validation",
+                                       self.data_loader_cfg.val.random_seed)
+        self.test_dataset = get_dataset(self.dataset_cfg, "test",
+                                        self.data_loader_cfg.val.random_seed)
+        self.vocab_size = self.train_dataset.cfg.tokenizer.vocab_size
 
     def get_persistent(self, loader_cfg: DataLoaderStageCfg) -> bool | None:
         return None if loader_cfg.num_workers == 0 else loader_cfg.persistent_workers
@@ -56,10 +63,8 @@ class DataModule:
         return generator
 
     def train_dataloader(self):
-        dataset = get_dataset(self.dataset_cfg, "train", 
-                                self.data_loader_cfg.train.random_seed)
         return DataLoader(
-            dataset,
+            self.train_dataset,
             self.data_loader_cfg.train.batch_size,
             shuffle=True,num_workers=self.data_loader_cfg.train.num_workers,
             prefetch_factor=self.data_loader_cfg.train.prefetch_factor,
@@ -68,10 +73,8 @@ class DataModule:
             worker_init_fn=worker_init_fn)
 
     def val_dataloader(self):
-        dataset = get_dataset(self.dataset_cfg, "validation", 
-                                self.data_loader_cfg.val.random_seed)
         return DataLoader(
-            dataset,
+            self.val_dataset,
             self.data_loader_cfg.val.batch_size,
             num_workers=self.data_loader_cfg.val.num_workers,
             prefetch_factor=self.data_loader_cfg.val.prefetch_factor,
@@ -80,10 +83,8 @@ class DataModule:
             worker_init_fn=worker_init_fn)
 
     def test_dataloader(self):
-        dataset = get_dataset(self.dataset_cfg, "test", 
-                                self.data_loader_cfg.test.random_seed)
         return DataLoader(
-            dataset,
+            self.test_dataset,
             self.data_loader_cfg.test.batch_size,
             num_workers=self.data_loader_cfg.test.num_workers,
             prefetch_factor=self.data_loader_cfg.test.prefetch_factor,

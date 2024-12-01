@@ -240,7 +240,7 @@ def model_training(cfg, vis_dir):
     data_module = DataModule(cfg.dataset, cfg.data_loader, global_rank=0)
 
     # loading model with updated cfgs
-    cfg.model.vocab_size = cfg.dataset.tokenizer.vocab_size
+    cfg.model.vocab_size = data_module.vocab_size
     cfg.model.max_length = cfg.dataset.max_length
     model = get_model(cfg.model)
 

@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from typing import Literal, Optional
 
+import os
 import torch
 from einops import repeat
 from jaxtyping import Float
 from torch import Tensor, nn
 from .decoder import Decoder
+from .huffman_trees.hsoftmax_layer import HSoftmaxLayer
 
 @dataclass
 class DecoderLSTMCellCfg:
@@ -15,6 +17,7 @@ class DecoderLSTMCellCfg:
     bias: bool
     output_len: Optional[int]
     vocab_size: Optional[int]
+    huffman_tree_dir: Optional[str]
 
 class DecoderLSTMCell(Decoder[DecoderLSTMCellCfg]):
     def __init__(self, cfg: DecoderLSTMCellCfg) -> None:
@@ -35,9 +38,16 @@ class DecoderLSTMCell(Decoder[DecoderLSTMCellCfg]):
         self.next_token_in = nn.Sequential(
             nn.Linear(in_features=self.cfg.hidden_size, 
                       out_features=self.cfg.input_size, bias=True))
-        self.next_token_out = nn.Sequential(
-            nn.Linear(in_features=self.cfg.input_size, 
-                      out_features=self.cfg.vocab_size, bias=True), nn.LogSoftmax(dim=1))
+        
+        self.huffman_flag = False
+        if os.path.isdir(str(self.cfg.huffman_tree_dir)):
+            self.next_token_out = HSoftmaxLayer(vocab_size=self.cfg.vocab_size, attention_dim=self.cfg.input_size,
+                                                huffman_tree_dir=self.cfg.huffman_tree_dir, num_workers=1)
+            self.huffman_flag = True
+        else:
+            self.next_token_out = nn.Sequential(
+                nn.Linear(in_features=self.cfg.input_size, 
+                        out_features=self.cfg.vocab_size, bias=True), nn.LogSoftmax(dim=1))
         self.out_act = nn.ReLU()
     def init_hidden_cell(self):
         self.y0 = torch.nn.Parameter(torch.randn(1, self.cfg.input_size)) # requires_grad
@@ -71,7 +81,10 @@ class DecoderLSTMCell(Decoder[DecoderLSTMCellCfg]):
 
              # we have utilized Linear+ReLu mapping from hidden to inputShape
              next_token_inShape = self.next_token_in(self.out_act(hx))
-             output_logits.append(self.next_token_out(self.out_act(next_token_inShape)))
+             next_token = self.next_token_out(self.out_act(next_token_inShape))
+             if self.huffman_flag: next_token = next_token.squeeze(dim=1)
+             print(next_token.shape)
+             output_logits.append(next_token)
              outputs.append(next_token_inShape)
         
         output_logits = torch.stack(output_logits, dim=1) # [batch, out_seq, vocab_size]

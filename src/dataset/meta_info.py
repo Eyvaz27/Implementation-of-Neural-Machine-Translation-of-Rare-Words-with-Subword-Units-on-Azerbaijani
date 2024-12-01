@@ -7,6 +7,6 @@ DATASET_PATH = "/workspaces/Implementation-of-Neural-Machine-Translation-of-Rare
 
 @dataclass
 class TokenizerCfg:
-    vocab_size: int
+    vocab_size: Optional[int]
     min_frequency: int
     ckpt_path: Optional[str]

@@ -15,6 +15,7 @@ class DecoderGRUCellCfg:
     bias: bool
     output_len: Optional[int]
     vocab_size: Optional[int]
+    huffman_tree_dir: Optional[str]
 
 class DecoderGRUCell(Decoder[DecoderGRUCellCfg]):
     def __init__(self, cfg: DecoderGRUCellCfg) -> None:
