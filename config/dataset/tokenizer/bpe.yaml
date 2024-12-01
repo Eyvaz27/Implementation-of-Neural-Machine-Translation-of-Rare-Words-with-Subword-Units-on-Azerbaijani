@@ -1,4 +1,3 @@
-bpe:
-  vocab_size: 32000
-  min_frequency: 2
-  ckpt_path: "/workspaces/Implementation-of-Neural-Machine-Translation-of-Rare-Words-with-Subword-Units-on-Azerbaijani/analysis/tokenizer_files/aze_nsp.json"
+vocab_size: 32000
+min_frequency: 2
+ckpt_path: "/workspaces/Implementation-of-Neural-Machine-Translation-of-Rare-Words-with-Subword-Units-on-Azerbaijani/analysis/tokenizer_files/aze_nsp.json"

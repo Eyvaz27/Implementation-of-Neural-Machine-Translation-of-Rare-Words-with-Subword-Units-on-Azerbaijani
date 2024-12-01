@@ -1,11 +1,11 @@
 from torch.utils.data import Dataset
-from .aze_nsp import TweetDataset, TweetDatasetCfg
+from .aze_nsp import AZE_NSP_Dataset, AZE_NSP_DatasetCfg
 from .meta_info import Stage
 
 DATASETS: dict[str, Dataset] = {
-    "tweet": TweetDataset}
+    "aze_nsp": AZE_NSP_Dataset}
 
-DatasetCfg = TweetDatasetCfg
+DatasetCfg = AZE_NSP_DatasetCfg
 
 def get_dataset(
     cfg: DatasetCfg,

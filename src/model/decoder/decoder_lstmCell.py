@@ -38,7 +38,7 @@ class DecoderLSTMCell(Decoder[DecoderLSTMCellCfg]):
         self.next_token_out = nn.Sequential(
             nn.Linear(in_features=self.cfg.input_size, 
                       out_features=self.cfg.vocab_size, bias=True), nn.LogSoftmax(dim=1))
-        
+        self.out_act = nn.ReLU()
     def init_hidden_cell(self):
         self.y0 = torch.nn.Parameter(torch.randn(1, self.cfg.input_size)) # requires_grad
         self.h0 = torch.nn.Parameter(torch.randn(1, self.cfg.hidden_size)) # requires_grad
@@ -70,8 +70,8 @@ class DecoderLSTMCell(Decoder[DecoderLSTMCellCfg]):
              hx, cx = self.cell(context_plus_input, (hx, cx))  # running LSTM cell over sequence
 
              # we have utilized Linear+ReLu mapping from hidden to inputShape
-             next_token_inShape = self.next_token_in(nn.Relu(hx))
-             output_logits.append(self.next_token_out(nn.Relu(next_token_inShape)))
+             next_token_inShape = self.next_token_in(self.out_act(hx))
+             output_logits.append(self.next_token_out(self.out_act(next_token_inShape)))
              outputs.append(next_token_inShape)
         
         output_logits = torch.stack(output_logits, dim=1) # [batch, out_seq, vocab_size]

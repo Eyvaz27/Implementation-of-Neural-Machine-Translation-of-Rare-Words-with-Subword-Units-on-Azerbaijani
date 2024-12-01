@@ -50,7 +50,7 @@ class Bahdanau(NSP[BahdanauCfg]):
         ) -> Float[Tensor, "batch seq vocab_size"]:
 
         # Embedding input tokens according to LookUp table
-        embedded_input = self.embedding_layer(input_tokens)
+        embedded_input = self.embedding_layer(input_tokens).squeeze(dim=-2)
         encoded_features = self.encoder.forward(embedded_input)
         decoded_logits = self.decoder.forward(encoded_features)
         return decoded_logits

@@ -16,8 +16,7 @@ class AZE_NSP_DatasetCfg:
     name: Literal["aze_nsp"]
     max_length: int
     padding: str
-    truncation: bool
-    embedding_dim: int
+    truncation: str
     eval_set_ratio: float
     tokenizer: TokenizerCfg
 
@@ -101,7 +100,7 @@ class AZE_NSP_Dataset(Dataset):
         self.tokenizer.save(self.cfg.tokenizer.ckpt_path, pretty=True)
         
     def __len__(self):
-        return len(self.feature_texts)
+        return len(self.input_text_samples)
     
     def __getitem__(self, idx):
         # # # 
@@ -114,7 +113,7 @@ class AZE_NSP_Dataset(Dataset):
         # first portion of the output sentence will be retrieved
         self.tokenizer.enable_padding(length=self.cfg.max_length, direction="right")
         self.tokenizer.enable_truncation(max_length=self.cfg.max_length, direction="right")
-        output_sentence = self.tokenizer.encode(self.label_texts[idx])
+        output_sentence = self.tokenizer.encode(self.output_text_samples[idx]).ids
 
         return {"input": torch.LongTensor(np.array(input_context).reshape(-1, 1)),
                 "output": torch.LongTensor(np.array(output_sentence).reshape(-1, 1))}

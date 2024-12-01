@@ -135,7 +135,7 @@ class Trainer:
     def training_step(self, batch):
         total_loss = 0.0
         
-        features, gt_label = batch
+        features, gt_label = batch["input"], batch["output"]
         predictions = self.model(features)
         
         for loss_fn in self.losses:
@@ -150,7 +150,7 @@ class Trainer:
         for batch in self.validation_dataloader:
             total_loss = 0.0
 
-            features, gt_label = batch
+            features, gt_label = batch["input"], batch["output"]
             predictions = self.model(features)
             
             for loss_fn in self.losses:
@@ -167,7 +167,7 @@ class Trainer:
         for batch in self.test_dataloader:
             total_loss = 0.0
 
-            features, gt_label = batch
+            features, gt_label = batch["input"], batch["output"]
             predictions = self.model(features)
             
             for loss_fn in self.losses:
@@ -189,8 +189,8 @@ class Trainer:
                 training_loss = self.training_step(batch=train_batch)
                 training_loss.backward()
                 # Perform Gradient Clipping for stabilization
-                torch.nn.utils.clip_grad_norm_(self.encoder.parameters(), 
-                                            self.cfg.optimizer.gradient_clip_val)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 
+                                               self.cfg.optimizer.gradient_clip_val)
                 # Optimizer step
                 self.optimizer.step()
                 print(f"Training loss after {epoch_num} steps = {np.mean(epoch_loss_history)}")

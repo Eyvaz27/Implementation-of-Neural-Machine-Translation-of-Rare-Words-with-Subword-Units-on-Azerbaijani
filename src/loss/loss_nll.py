@@ -20,13 +20,13 @@ class LossNLL(Loss[LossNLLCfg, LossNLLCfgWrapper]):
     def forward(
         self,
         prediction: Float[Tensor, "batch seq logits"],
-        ground_truth: Float[Tensor, "batch seq"],
+        ground_truth: Float[Tensor, "batch seq 1"],
     ) -> Float[Tensor, ""]:
         
         # define NLL criterion
         criterion = nn.NLLLoss()
         # compute loss on reshaped tensors
         prediction = rearrange(prediction, "b s l -> (b s) l")
-        ground_truth = rearrange(ground_truth, "b s -> (b s)")
+        ground_truth = rearrange(ground_truth, "b s 1 -> (b s)")
         ground_truth = ground_truth.to(device=prediction.device)
         return criterion(prediction, ground_truth)

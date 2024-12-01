@@ -42,7 +42,7 @@ class EncoderLSTM(Encoder[EncoderLSTMCfg]):
         self,
         features: Float[Tensor, "batch seq dim"]
         ) -> Float[Tensor, "batch seq hdim"]:
-
+        
         N, _, _ = features.shape
         # # # initialize hidden and cell states
         h0, c0 = self.reset_hidden_cell(N)
@@ -51,6 +51,7 @@ class EncoderLSTM(Encoder[EncoderLSTMCfg]):
 
         return output # [batch, seq, 2∗hidden_dim]
     
+    @property
     def feature_dim(self):
         D = 2 if self.cfg.bidirectional else 1
         return D * self.cfg.hidden_size

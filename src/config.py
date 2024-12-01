@@ -7,8 +7,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from .dataset.data_module import DataLoaderCfg, DatasetCfg
 from .loss import LossCfgWrapper
-from .model.decoder import DecoderCfg
-from .model.encoder import EncoderCfg
+from .model import ModelCfg 
 
 @dataclass
 class OptimizerCfg:
@@ -25,11 +24,6 @@ class CheckpointingCfg:
     training_loss_log: int
     validate_iter: int
     test_iter: int
-
-@dataclass
-class ModelCfg:
-    encoder: EncoderCfg
-    decoder: DecoderCfg  
 
 @dataclass
 class TrainerCfg:

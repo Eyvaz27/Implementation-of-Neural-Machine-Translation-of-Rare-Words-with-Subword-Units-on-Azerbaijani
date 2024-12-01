@@ -1,6 +1,7 @@
 name: bahdanau
-encoder: lstm
-decoder: lstm_cell
+defaults:
+  - encoder: lstm
+  - decoder: lstm_cell
+  - embedding: torch
 vocab_size: null
 max_length: null
-embedding: torch

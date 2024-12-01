@@ -2,7 +2,7 @@ defaults:
   - hydra: defaults
   - dataset: aze_nsp
   - model: bahdanau
-  - loss: [cce]
+  - loss: [nll]
   - _self_ 
 
 data_loader:
