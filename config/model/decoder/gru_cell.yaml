@@ -1,6 +1,7 @@
 name: gru_cell
 input_size: null
-hidden_size: 64
+hidden_size: 32
 bias: true
 output_len: null
 vocab_size: null
+huffman_tree_dir: "/workspaces/Implementation-of-Neural-Machine-Translation-of-Rare-Words-with-Subword-Units-on-Azerbaijani/analysis/huffman_save/aze_nsp/"

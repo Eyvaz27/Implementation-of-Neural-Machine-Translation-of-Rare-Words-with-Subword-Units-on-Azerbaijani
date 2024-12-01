@@ -1,6 +1,6 @@
 name: gru
 input_size: null
-hidden_size: 64
+hidden_size: 32
 num_layers: 2
 bias: true
 batch_first: true

@@ -49,6 +49,7 @@ class EncoderGRU(Encoder[EncoderGRUCfg]):
 
         return output # [batch, seq, 2∗hidden_dim]
     
+    @property
     def feature_dim(self):
         D = 2 if self.cfg.bidirectional else 1
         return D * self.cfg.hidden_size

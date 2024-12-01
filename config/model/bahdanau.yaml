@@ -1,7 +1,7 @@
 name: bahdanau
 defaults:
-  - encoder: lstm
-  - decoder: lstm_cell
+  - encoder: gru
+  - decoder: gru_cell
   - embedding: torch
 vocab_size: null
 max_length: null

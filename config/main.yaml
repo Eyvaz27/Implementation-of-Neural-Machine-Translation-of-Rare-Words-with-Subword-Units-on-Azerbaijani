@@ -26,7 +26,7 @@ data_loader:
     random_seed: 42
 
 trainer:
-  epoch_num: 21
+  epoch_num: 50
   pretrained_ckpt: null
   optimizer:
     optimizer_type: "adam"
@@ -41,4 +41,4 @@ trainer:
     checkpoint_iter: 10
     training_loss_log: 1
     validate_iter: 5
-    test_iter: 20
+    test_iter: 10

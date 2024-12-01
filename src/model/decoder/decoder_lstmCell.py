@@ -83,7 +83,6 @@ class DecoderLSTMCell(Decoder[DecoderLSTMCellCfg]):
              next_token_inShape = self.next_token_in(self.out_act(hx))
              next_token = self.next_token_out(self.out_act(next_token_inShape))
              if self.huffman_flag: next_token = next_token.squeeze(dim=1)
-             print(next_token.shape)
              output_logits.append(next_token)
              outputs.append(next_token_inShape)
         
